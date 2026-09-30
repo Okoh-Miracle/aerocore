@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071019">
+  <title>AeroCore · Aviation Operations Intelligence</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-name">AEROCORE</div>
+          <div class="brand-sub">OPERATIONS INTELLIGENCE</div>
+        </div>
+      </div>
+      <div class="airport-switcher">
+        <span class="eyebrow">OPERATING CONTEXT</span>
+        <select id="airportSelect">
+          <option value="DNAA">DNAA · Abuja</option>
+          <option value="KJFK">KJFK · New York</option>
+          <option value="KLAX">KLAX · Los Angeles</option>
+        </select>
+      </div>
+      <nav>
+        <div class="nav-label">COMMAND</div>
+        <a class="nav-item active" data-panel="overview">◈ <span>Command Center</span></a>
+        <div class="nav-label">FLIGHT OPERATIONS</div>
+        <a class="nav-item" data-panel="traffic">✈ <span>Live Traffic</span></a>
+        <a class="nav-item" data-panel="flights">▤ <span>Flight Board</span></a>
+        <a class="nav-item" data-panel="aircraft">⌁ <span>Aircraft</span></a>
+        <div class="nav-label">AIRPORT OPERATIONS</div>
+        <a class="nav-item" data-panel="airport">▦ <span>Airport Status</span></a>
+        <a class="nav-item" data-panel="turnaround">↻ <span>Turnaround</span></a>
+        <a class="nav-item" data-panel="baggage">▤ <span>Baggage Intelligence</span></a>
+        <div class="nav-label">SAFETY</div>
+        <a class="nav-item" data-panel="safety">△ <span>Safety & Incidents</span></a>
+        <a class="nav-item" data-panel="events">≋ <span>Event Stream</span></a>
+        <div class="nav-label">SYSTEM</div>
+        <a class="nav-item" data-panel="sources">◎ <span>Data Sources</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="mode-line"><span class="status-dot"></span><span>OPERATIONS ONLINE</span></div>
+        <div class="muted">Portfolio decision-support system</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">INTEGRATED OPERATIONS CONTROL CENTER</div>
+          <h1 id="contextTitle">Nnamdi Azikiwe International Airport</h1>
+        </div>
+        <div class="top-actions">
+          <span id="socketStatus" class="pill pill-live"><span class="status-dot"></span> LIVE STREAM</span>
+          <button id="refreshBtn" class="icon-btn" title="Refresh snapshot">↻</button>
+          <div class="clock" id="clock">--:--:--</div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="overview" class="panel-section active-panel">
+          <div class="kpi-grid">
+            <div class="kpi"><span>TRACKED AIRCRAFT</span><strong id="kTracked">—</strong><small>OpenSky / simulator</small></div>
+            <div class="kpi"><span>AIRBORNE</span><strong id="kAirborne">—</strong><small><span class="up">● live state</span></small></div>
+            <div class="kpi"><span>HIGH ALTITUDE</span><strong id="kHigh">—</strong><small>≥ 9,000 m</small></div>
+            <div class="kpi"><span>ACTIVE ALERTS</span><strong id="kAlerts">—</strong><small id="kIncidentsText">— incidents</small></div>
+            <div class="kpi"><span>GATE UTILIZATION</span><strong id="kGates">—</strong><small>18 configured gates</small></div>
+            <div class="kpi"><span>SECURITY WAIT</span><strong id="kSecurity">—</strong><small>terminal estimate</small></div>
+          </div>
+
+          <div class="grid-2">
+            <section class="card map-card">
+              <div class="card-head"><div><span class="eyebrow">AIRSPACE</span><h2>Live traffic map</h2></div><span class="source-badge" id="trafficMode">SIMULATED</span></div>
+              <div id="map"></div>
+              <div class="map-footer"><span>Aircraft positions update through the operations event stream.</span><span id="trafficFreshness">Sync —</span></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><div><span class="eyebrow">AIRPORT WEATHER</span><h2 id="weatherStation">—</h2></div><span class="source-badge" id="weatherMode">PENDING</span></div>
+              <div class="weather-main"><div class="weather-cat" id="weatherCat">—</div><div class="weather-temp" id="weatherTemp">—</div></div>
+              <div class="weather-grid">
+                <div><span>WIND</span><strong id="weatherWind">—</strong></div>
+                <div><span>VISIBILITY</span><strong id="weatherVis">—</strong></div>
+                <div><span>DEW POINT</span><strong id="weatherDew">—</strong></div>
+                <div><span>OBSERVED</span><strong id="weatherObs">—</strong></div>
+              </div>
+              <div class="raw-weather" id="weatherRaw">Waiting for the latest METAR…</div>
+            </section>
+          </div>
+
+          <div class="grid-2 lower">
+            <section class="card">
+              <div class="card-head"><div><span class="eyebrow">OPERATIONAL QUEUE</span><h2>Turnarounds at risk</h2></div><button class="ghost" data-panel="turnaround">Open module →</button></div>
+              <div id="turnaroundList" class="stack"></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><div><span class="eyebrow">SAFETY & EXCEPTIONS</span><h2>Priority alerts</h2></div><button class="ghost" data-panel="safety">View safety →</button></div>
+              <div id="alertList" class="stack"></div>
+            </section>
+          </div>
+
+          <section class="card event-card">
+            <div class="card-head"><div><span class="eyebrow">EVENT BUS</span><h2>Live operational events</h2></div><span class="tiny">WEB SOCKET</span></div>
+            <div id="eventList" class="event-stream"></div>
+          </section>
+        </div>
+
+        <div id="traffic" class="panel-section"><div class="module-header"><div><span class="eyebrow">FLIGHT OPERATIONS</span><h2>Live Traffic</h2><p>Live aircraft state vectors with a simulator fallback for uninterrupted portfolio demos.</p></div><span id="trafficModuleMode" class="source-badge">—</span></div><section class="card"><div id="mapLarge"></div></section></div>
+        <div id="flights" class="panel-section"><div class="module-header"><div><span class="eyebrow">FLIGHT OPERATIONS</span><h2>Flight Board</h2><p>Operational context assembled from live aircraft state and simulated airport workflow.</p></div></div><section class="card table-card"><table><thead><tr><th>CALLSIGN</th><th>STATE</th><th>ALTITUDE</th><th>SPEED</th><th>VERTICAL</th><th>POSITION</th><th>LAST CONTACT</th></tr></thead><tbody id="flightTable"></tbody></table></section></div>
+        <div id="aircraft" class="panel-section"><div class="module-header"><div><span class="eyebrow">FLIGHT OPERATIONS</span><h2>Aircraft</h2><p>Normalized aircraft state with source provenance.</p></div></div><section class="card table-card"><table><thead><tr><th>ICAO24</th><th>CALLSIGN</th><th>COUNTRY</th><th>STATUS</th><th>ALT</th><th>TRACK</th></tr></thead><tbody id="aircraftTable"></tbody></table></section></div>
+        <div id="airport" class="panel-section"><div class="module-header"><div><span class="eyebrow">AIRPORT OPERATIONS</span><h2>Airport Status</h2><p>Runways, gates, apron, terminal and facilities operating picture.</p></div></div><div class="grid-3"><section class="card status-card"><span class="eyebrow">RUNWAYS</span><h3>04 / 22</h3><span class="good">● OPERATIONAL</span><div class="bar"><i style="width:88%"></i></div><small>Surface condition: NORMAL</small></section><section class="card status-card"><span class="eyebrow">GATES</span><h3>14 / 18</h3><span class="good">● 3 AVAILABLE</span><div class="bar"><i style="width:78%"></i></div><small>1 gate in maintenance</small></section><section class="card status-card"><span class="eyebrow">TERMINAL</span><h3>4,218</h3><span class="good">● FLOW NORMAL</span><div class="bar"><i style="width:67%"></i></div><small>Passenger volume index</small></section></div><section class="card airport-map-grid"><div class="airport-layout"><div class="terminal">TERMINAL<div class="gate-row"><span>G01</span><span>G02</span><span>G03</span><span class="occupied">G04</span><span>G05</span><span class="occupied">G17</span><span>G18</span><span>G21</span></div></div><div class="taxiway">TAXIWAY A</div><div class="runway">RWY 04/22 · ● OPERATIONAL</div></div><div class="facility-list"><div><b>Power</b><span class="good">NORMAL</span></div><div><b>HVAC</b><span class="good">NORMAL</span></div><div><b>Baggage</b><span class="warn">MONITOR</span></div><div><b>Security</b><span class="good">NORMAL</span></div></div></section></div>
+        <div id="turnaround" class="panel-section"><div class="module-header"><div><span class="eyebrow">GROUND OPERATIONS</span><h2>Aircraft Turnaround</h2><p>Stage-by-stage turnaround progress with operational delay risk.</p></div></div><div id="turnaroundGrid" class="turnaround-grid"></div></div>
+        <div id="baggage" class="panel-section"><div class="module-header"><div><span class="eyebrow">BAGGAGE CONTROL</span><h2>Baggage Intelligence</h2><p>Live flow, scan state and exception management across the baggage chain.</p></div></div><div class="kpi-grid"><div class="kpi"><span>BAGS PROCESSED</span><strong id="bagProcessed">—</strong><small>of <span id="bagTotal">—</span></small></div><div class="kpi"><span>EXCEPTIONS</span><strong id="bagExceptions">—</strong><small>last rolling window</small></div><div class="kpi"><span>OPEN INVESTIGATIONS</span><strong id="bagOpen">—</strong><small>requires human review</small></div></div><section class="card"><div class="flow"><div><span>CHECK-IN</span><b>1,284</b></div><div><span>SECURITY</span><b>1,251</b></div><div><span>SORTING</span><b>1,198</b></div><div><span>MAKE-UP</span><b>983</b></div><div><span>LOADED</span><b>874</b></div></div><div class="exception"><div><span class="eyebrow">ACTIVE EXCEPTION</span><h3>BAG-0837291</h3><p>Last scan: Security Zone B · Expected: Make-up Area 3 · Departure in 18 min</p></div><span class="severity high">HIGH RISK</span></div></section></div>
+        <div id="safety" class="panel-section"><div class="module-header"><div><span class="eyebrow">SAFETY INTELLIGENCE</span><h2>Safety & Incident Intelligence</h2><p>Operational anomalies become traceable incidents with acknowledgement and investigation states.</p></div></div><div id="incidentGrid" class="incident-grid"></div></div>
+        <div id="events" class="panel-section"><div class="module-header"><div><span class="eyebrow">EVENT BUS</span><h2>Operational Event Stream</h2><p>Normalized events across flights, airport operations, baggage, weather and safety.</p></div></div><section class="card"><div id="eventListLarge" class="event-stream tall"></div></section></div>
+        <div id="sources" class="panel-section"><div class="module-header"><div><span class="eyebrow">OBSERVABILITY</span><h2>Data Sources</h2><p>Health, freshness and fallback status for every external and synthetic source.</p></div></div><div class="source-grid"><section class="card source-item"><div><span class="source-icon">✈</span><h3>OpenSky</h3><small>ADS-B state vectors</small></div><div><span id="sourceOpenSky" class="good">—</span><p id="sourceOpenSkyMeta">—</p></div></section><section class="card source-item"><div><span class="source-icon">☁</span><h3>Aviation Weather Center</h3><small>METAR aviation weather</small></div><div><span id="sourceAWC" class="good">—</span><p id="sourceAWCMeta">—</p></div></section><section class="card source-item"><div><span class="source-icon">⚙</span><h3>Operations Simulator</h3><small>Airport internal events</small></div><div><span class="good">RUNNING</span><p>1-second event loop</p></div></section></div></div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

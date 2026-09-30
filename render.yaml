@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: aerocore
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENSKY_CLIENT_ID
+        sync: false
+      - key: OPENSKY_CLIENT_SECRET
+        sync: false
+      - key: OPENSKY_ANONYMOUS_REFRESH_SECONDS
+        value: "300"
+      - key: OPENSKY_AUTH_REFRESH_SECONDS
+        value: "10"
+      - key: WEATHER_REFRESH_SECONDS
+        value: "60"
