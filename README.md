@@ -1,5 +1,7 @@
 # AeroCore
 
+See live build https://aerocore-aviation-ops.onrender.com/
+
 ## Real-Time Aviation Operations & Intelligence Platform
 
 AeroCore is a GitHub-ready operations-control portfolio project that unifies live ADS-B surveillance, aviation weather, airport operations, aircraft turnaround, baggage intelligence, safety incidents, event streaming, and AI-ready operational analytics in one interface.
